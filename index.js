@@ -1,7 +1,8 @@
 const { IPSet } = require( 'futoin-ipset' );  
 const CIDR = require('cidr-js');
-const faker = require('faker');
 const cidr = new CIDR();
+
+const faker = require('faker');
 
 const randomCidr = () => {
   let randomIP = faker.internet.ip(); 
@@ -10,27 +11,28 @@ const randomCidr = () => {
 }
 
 const buildAndRecordTestData = (ipset, backtrack) => {
-  for(let i=0; i<10; i++) {
+  const list = 'rando-list'
+  for(let i=0; i < (1<<10); i++) {
     let block = randomCidr();
-    console.log('adding block', block);
+    console.log('adding block', block, `using ${list}`);
     backtrack.push(block);
-    ipset.add(block, 'randolist');
+    ipset.add(block, list);
   }
   console.log(backtrack);
 }
 
-const matchResults = (ipset, results) => {
-  results.forEach((result) => {
-     console.log(ipset.match(result), 'testing', result);
+const matchAddresses = (ipset, addresses) => {
+  addresses.forEach((address) => {
+     console.log('testing', address, ipset.match(address));
   });
 }
 
 const checkEachBlock = (ipset, backtrack) => {
   backtrack.forEach((block) => {
     console.log('matching items from this block', block);
-    let results = cidr.list(block);
-    console.log(results);
-    matchResults(ipset, results); 
+    let addresses = cidr.list(block);
+    console.log(addresses);
+    matchAddresses(ipset, addresses); 
   });
 }
 
@@ -42,8 +44,9 @@ const qed = () => {
   checkEachBlock(ipset, backtrack);
   let notOnTheList = randomCidr(),
       expanded = cidr.list(notOnTheList);
-  console.log(`Testing a randon non added block ${notOnTheList}`, expanded);
-  expanded.forEach((result) => console.log(ipset.match(result), 'testing', result));
+  
+  console.log(`\n\nTesting a random non added block ${notOnTheList}`, expanded);
+  expanded.forEach((address) => console.log(ipset.match(address), 'testing', address));
 }
 
 qed();
